@@ -1,10 +1,7 @@
 {
     "version": 2,
     "builds": [
-      {
-        "src": "backend.js",
-        "use": "@vercel/node"
-      }
+      { "src": "npm run build", "use": "@vercel/static-build" }
     ]
   }
   
