@@ -1,15 +1,17 @@
 {
     "version": 2,
-    "builds": [
-      {
-        "src": "backend.js",
-        "use": "@vercel/node"
+    "functions": {
+      "mi_funcion": {
+        "runtime": "@vercel/node",
+        "memory": 512,
+        "timeout": 30 
       }
-    ],
+    },
     "routes": [
       {
         "src": "/(.*)",
-        "dest": "/backend.js"
+        "dest": "/backend.js",
+        "methods": ["GET", "POST"] 
       }
     ]
   }
