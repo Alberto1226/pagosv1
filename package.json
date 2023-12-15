@@ -5,9 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon backend.js --verbose",
-    "build": "nodemon backend.js --verbose"
+    "start": "node backend.js"  
   },
   "keywords": [],
   "author": "",
@@ -17,8 +15,5 @@
     "body-parser": "^1.20.2",
     "express": "^4.18.2",
     "node-fetch": "^3.3.2"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
   }
 }
