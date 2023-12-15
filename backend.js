@@ -131,6 +131,7 @@ app.post('/nuevaventa', async (req, res) => {
     if (response.ok) {
       const data = await response.json();
       res.status(200).json(data);
+      //nueva funcionalidad
     } else {
       res.status(response.status).send('Error');
     }
