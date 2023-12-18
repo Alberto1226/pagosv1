@@ -84,6 +84,20 @@ function encryptIdAndValorClave(combinedIdValorClave) {
  * obtener resultado
  */
 
+async function realizarSolicitudResultado(id, idCifrado) {
+  const resultadoUrl = "https://www.prosepago.net/v2/resultadov2.ashx";
+  const resultadoRequestBody = `&idsolicitud=${id}&cadenaEncriptada=${idCifrado}`;
+  console.log("Body :", resultadoRequestBody);
+  const resultadoResponse = await fetch(resultadoUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: resultadoRequestBody,
+  });
+  return resultadoResponse;
+}
+
 
 
 app.post("/nuevaventa", async (req, res) => {
@@ -136,7 +150,7 @@ app.post("/nuevaventa", async (req, res) => {
     });
 
     if (response.ok) {
-      setTimeout(async () => {
+      //setTimeout(async () => {
       const data = await response.json();
       const id = data; // Guardar la respuesta en la variable global 'id'
       console.log(data);
@@ -154,9 +168,9 @@ app.post("/nuevaventa", async (req, res) => {
       console.log("cadena encriptada", idCifrado);
 
       
-
+      const resultadoResponse = await realizarSolicitudResultado(id, idCifrado);
       // Enviar solicitud POST a la nueva URL con 'idCifrado'
-      const resultadoUrl = "https://www.prosepago.net/v2/resultadov2.ashx";
+      /*const resultadoUrl = "https://www.prosepago.net/v2/resultadov2.ashx";
       const resultadoRequestBody = `&idsolicitud=${id}&cadenaEncriptada=${idCifrado}`;
       console.log("Body :", resultadoRequestBody);
       const resultadoResponse = await fetch(resultadoUrl, {
@@ -165,44 +179,278 @@ app.post("/nuevaventa", async (req, res) => {
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: resultadoRequestBody,
-      });
+      });*/
       
       //fin de pag
       //inicio de validacion de resultado
      
       if (resultadoResponse.ok) {
         
-      
-        
-        
+        let resultadoXMLText = await resultadoResponse.text();
+
+        while (resultadoXMLText.trim() === "901") {
+          await new Promise(resolve => setTimeout(resolve, 4000)); // Espera 4 segundos
+
           try {
-            const resultadoXMLText = await resultadoResponse.text(); // Obtiene el texto de la respuesta
-            
-            // Convertir el texto XML a Base64
-            const encodedXML = Buffer.from(resultadoXMLText).toString('base64');
-      
-            //resultadoXMLBase64 = encodedXML; // Actualiza el valor de la cadena Base64
-      
-            // Aquí puedes utilizar 'encodedXML' según tus necesidades, como enviarlo o trabajar con él
-            console.log("XML codificado en Base64:", encodedXML);
-      
-            // Ejemplo de envío como respuesta JSON con el XML codificado
-            res.status(200).json({ encodedXML });
-          } catch (error) {
-            // Manejo de errores al procesar la respuesta XML
-            res.status(500).send("Error al procesar la respuesta XML");
-          }
+            const resultadoResponseRepeat = await realizarSolicitudResultado(id, idCifrado);
         
+            if (resultadoResponseRepeat.ok) {
+              resultadoXMLText = await resultadoResponseRepeat.text();
+              console.log("resultado", resultadoXMLText);
+            } else {
+              throw new Error("Error en la solicitud repetida");
+            }
+          } catch (error) {
+            console.log("Error en la solicitud repetida:", error.message);
+            // Manejar este error específico o lanzar uno nuevo según sea necesario
+          }
+        }
+
+        if (resultadoXMLText.trim() !== "901") {
+          const encodedXML = Buffer.from(resultadoXMLText).toString('base64');
+          res.status(200).json({ encodedXML });
+        } else {
+          res.status(500).send("Se alcanzó el límite de intentos o se obtuvo un resultado no válido.");
+        }
         
       }  else {
         res.status(resultadoResponse.status).send("Error al obtener resultados");
       }
-    }, 20000); // Esperar 20 segundos (20000 milisegundos)
+    //}, 20000); // Esperar 20 segundos (20000 milisegundos)
     } else {
       res.status(response.status).send("Error");
     }
   } catch (error) {
     res.status(500).send("Error interno en el servidor");
+  }
+});
+
+/**
+ * reimprimir ticket
+ */
+
+
+
+app.post("/reimprimirticket", async (req, res) => {
+  
+  const valorClave = "SzXQUp554W";
+  const {
+    tipoPlan,
+    terminal,
+    folio,
+    pv
+  } = req.body;
+
+  // Crear una variable concatenada con los valores sin las claves
+  const datosVentaConcatenados = tipoPlan + terminal + folio+valorClave;
+  console.log(datosVentaConcatenados);
+
+  const idCifrado = encryptIdAndValorClave(datosVentaConcatenados);
+  console.log(idCifrado);
+
+
+  try {
+    const reimprimirUrl = "https://www.prosepago.net/v2/nuevaventav2.ashx";
+
+    const requestBody2 = `&tipoPlan=${tipoPlan}&terminal=${terminal}&folio=${folio}&pv=${pv}&cadenaEncriptada=${idCifrado}`;
+    console.log("RequestBody:", requestBody2);
+
+    const response = await fetch(reimprimirUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: requestBody2,
+    });
+
+    if (response.ok) {
+      //setTimeout(async () => {
+      const data = await response.json();
+      const id = data; // Guardar la respuesta en la variable global 'id'
+      console.log(data);
+      console.log(id);
+
+      // Cifrar 'id' y 'valorClave'
+      const valorClave = "SzXQUp554W"; // Considerando que esto ya está definido en tu código
+      console.log(valorClave);
+
+      const idCifradoSinEncriptar = id + valorClave;
+      console.log("Cadena sin encriptar", idCifradoSinEncriptar);
+
+      const idCifrado = encryptIdAndValorClave(idCifradoSinEncriptar);
+
+      console.log("cadena encriptada", idCifrado);
+
+      
+      const resultadoResponse = await realizarSolicitudResultado(id, idCifrado);
+      // Enviar solicitud POST a la nueva URL con 'idCifrado'
+      /*const resultadoUrl = "https://www.prosepago.net/v2/resultadov2.ashx";
+      const resultadoRequestBody = `&idsolicitud=${id}&cadenaEncriptada=${idCifrado}`;
+      console.log("Body :", resultadoRequestBody);
+      const resultadoResponse = await fetch(resultadoUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: resultadoRequestBody,
+      });*/
+      
+      //fin de pag
+      //inicio de validacion de resultado
+     
+      if (resultadoResponse.ok) {
+        
+        let resultadoXMLText = await resultadoResponse.text();
+
+        while (resultadoXMLText.trim() === "901") {
+          await new Promise(resolve => setTimeout(resolve, 4000)); // Espera 4 segundos
+
+          try {
+            const resultadoResponseRepeat = await realizarSolicitudResultado(id, idCifrado);
+        
+            if (resultadoResponseRepeat.ok) {
+              resultadoXMLText = await resultadoResponseRepeat.text();
+              console.log("resultado", resultadoXMLText);
+            } else {
+              throw new Error("Error en la solicitud repetida");
+            }
+          } catch (error) {
+            console.log("Error en la solicitud repetida:", error.message);
+            // Manejar este error específico o lanzar uno nuevo según sea necesario
+          }
+        }
+
+        if (resultadoXMLText.trim() !== "901") {
+          const encodedXML = Buffer.from(resultadoXMLText).toString('base64');
+          res.status(200).json({ encodedXML });
+        } else {
+          res.status(500).send("Se alcanzó el límite de intentos o se obtuvo un resultado no válido.");
+        }
+        
+      }  else {
+        res.status(resultadoResponse.status).send("Error al obtener resultados");
+      }
+    //}, 20000); // Esperar 20 segundos (20000 milisegundos)
+    } else {
+      res.status(response.status).send("Error al reimprimir el ticket");
+    }
+  } catch (error) {
+    res.status(500).send("Error interno en el servidor al reimprimir el ticket");
+  }
+});
+
+
+/**
+ * cancelar venta
+ */
+
+app.post("/cancelarventa", async (req, res) => {
+  
+  const valorClave = "SzXQUp554W";
+  const {
+    tipoPlan,
+    terminal,
+    importe,
+    referencia,
+    folio,
+    pv
+  } = req.body;
+
+  // Crear una variable concatenada con los valores sin las claves
+  const datosVentaConcatenados = tipoPlan + terminal + importe + referencia + folio+valorClave;
+  console.log(datosVentaConcatenados);
+
+  const idCifrado = encryptIdAndValorClave(datosVentaConcatenados);
+  console.log(idCifrado);
+
+
+  try {
+    const reimprimirUrl = "https://www.prosepago.net/v2/nuevaventav2.ashx";
+
+    const requestBody2 = `&tipoPlan=${tipoPlan}&terminal=${terminal}&importe=${importe}&referencia=${referencia}&folio=${folio}&pv=${pv}&cadenaEncriptada=${idCifrado}`;
+    console.log("RequestBody:", requestBody2);
+
+    const response = await fetch(reimprimirUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: requestBody2,
+    });
+
+    if (response.ok) {
+      //setTimeout(async () => {
+      const data = await response.json();
+      const id = data; // Guardar la respuesta en la variable global 'id'
+      console.log(data);
+      console.log(id);
+
+      // Cifrar 'id' y 'valorClave'
+      const valorClave = "SzXQUp554W"; // Considerando que esto ya está definido en tu código
+      console.log(valorClave);
+
+      const idCifradoSinEncriptar = id + valorClave;
+      console.log("Cadena sin encriptar", idCifradoSinEncriptar);
+
+      const idCifrado = encryptIdAndValorClave(idCifradoSinEncriptar);
+
+      console.log("cadena encriptada", idCifrado);
+
+      
+      const resultadoResponse = await realizarSolicitudResultado(id, idCifrado);
+      // Enviar solicitud POST a la nueva URL con 'idCifrado'
+      /*const resultadoUrl = "https://www.prosepago.net/v2/resultadov2.ashx";
+      const resultadoRequestBody = `&idsolicitud=${id}&cadenaEncriptada=${idCifrado}`;
+      console.log("Body :", resultadoRequestBody);
+      const resultadoResponse = await fetch(resultadoUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: resultadoRequestBody,
+      });*/
+      
+      //fin de pag
+      //inicio de validacion de resultado
+     
+      if (resultadoResponse.ok) {
+        
+        let resultadoXMLText = await resultadoResponse.text();
+
+        while (resultadoXMLText.trim() === "901") {
+          await new Promise(resolve => setTimeout(resolve, 4000)); // Espera 4 segundos
+
+          try {
+            const resultadoResponseRepeat = await realizarSolicitudResultado(id, idCifrado);
+        
+            if (resultadoResponseRepeat.ok) {
+              resultadoXMLText = await resultadoResponseRepeat.text();
+              console.log("resultado", resultadoXMLText);
+            } else {
+              throw new Error("Error en la solicitud repetida");
+            }
+          } catch (error) {
+            console.log("Error en la solicitud repetida:", error.message);
+            // Manejar este error específico o lanzar uno nuevo según sea necesario
+          }
+        }
+
+        if (resultadoXMLText.trim() !== "901") {
+          const encodedXML = Buffer.from(resultadoXMLText).toString('base64');
+          res.status(200).json({ encodedXML });
+        } else {
+          res.status(500).send("Se alcanzó el límite de intentos o se obtuvo un resultado no válido.");
+        }
+        
+      }  else {
+        res.status(resultadoResponse.status).send("Error al obtener resultados");
+      }
+    //}, 20000); // Esperar 20 segundos (20000 milisegundos)
+    } else {
+      res.status(response.status).send("Error al reimprimir el ticket");
+    }
+  } catch (error) {
+    res.status(500).send("Error interno en el servidor al reimprimir el ticket");
   }
 });
 

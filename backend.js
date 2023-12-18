@@ -379,7 +379,7 @@ app.post("/cancelarventa", async (req, res) => {
     });
 
     if (response.ok) {
-      //setTimeout(async () => {
+      setTimeout(async () => {
       const data = await response.json();
       const id = data; // Guardar la respuesta en la variable global 'id'
       console.log(data);
@@ -416,10 +416,10 @@ app.post("/cancelarventa", async (req, res) => {
       if (resultadoResponse.ok) {
         
         let resultadoXMLText = await resultadoResponse.text();
-
+        
         while (resultadoXMLText.trim() === "901") {
-          await new Promise(resolve => setTimeout(resolve, 4000)); // Espera 4 segundos
-
+          await new Promise(resolve => setTimeout(resolve, 9000)); // Espera 4 segundos
+          console.log(resultadoXMLText);
           try {
             const resultadoResponseRepeat = await realizarSolicitudResultado(id, idCifrado);
         
@@ -445,9 +445,9 @@ app.post("/cancelarventa", async (req, res) => {
       }  else {
         res.status(resultadoResponse.status).send("Error al obtener resultados");
       }
-    //}, 20000); // Esperar 20 segundos (20000 milisegundos)
+    }, 10000); // Esperar 20 segundos (20000 milisegundos)
     } else {
-      res.status(response.status).send("Error al reimprimir el ticket");
+      res.status(response.status).send("Error al cancelar el ticket");
     }
   } catch (error) {
     res.status(500).send("Error interno en el servidor al reimprimir el ticket");
