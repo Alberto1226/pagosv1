@@ -2,11 +2,7 @@
   "version": 2,
   "functions": {
     "api": {
-      "maxDuration": {
-        "default": 15,
-        "Pro": 300,
-        "Enterprise": 900
-      }
+      "maxDuration": 15
     }
   },
   "builds": [
