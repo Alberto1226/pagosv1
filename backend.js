@@ -100,7 +100,6 @@ async function realizarSolicitudResultado(id, idCifrado) {
 
 
 
-
 app.post("/nuevaventa", async (req, res) => {
   const {
     tipoPlan,
@@ -217,7 +216,7 @@ app.post("/nuevaventa", async (req, res) => {
       }  else {
         res.status(resultadoResponse.status).send("Error al obtener resultados");
       }
-    //}, 5000); // Esperar 20 segundos (20000 milisegundos)
+    //}, 20000); // Esperar 20 segundos (20000 milisegundos)
     } else {
       res.status(response.status).send("Error");
     }
@@ -380,7 +379,7 @@ app.post("/cancelarventa", async (req, res) => {
     });
 
     if (response.ok) {
-      //setTimeout(async () => {
+      setTimeout(async () => {
       const data = await response.json();
       const id = data; // Guardar la respuesta en la variable global 'id'
       console.log(data);
@@ -446,7 +445,7 @@ app.post("/cancelarventa", async (req, res) => {
       }  else {
         res.status(resultadoResponse.status).send("Error al obtener resultados");
       }
-    //}, 20000); // Esperar 20 segundos (20000 milisegundos)
+    }, 10000); // Esperar 20 segundos (20000 milisegundos)
     } else {
       res.status(response.status).send("Error al cancelar el ticket");
     }
