@@ -4,6 +4,7 @@ import crypto from "crypto";
 import fetch from "node-fetch";
 
 const app = express();
+export const maxDuration = 60;
 
 app.use(bodyParser.json());
 
