@@ -89,12 +89,16 @@ async function realizarSolicitudResultado(id, idCifrado) {
   const resultadoUrl = "https://www.prosepago.net/v2/resultadov2.ashx";
   const resultadoRequestBody = `&idsolicitud=${id}&cadenaEncriptada=${idCifrado}`;
   console.log("Body :", resultadoRequestBody);
+  const options = {
+    timeout: process.env.FUNCTION_INVOCATION_TIMEOUT * 1000,
+  };
   const resultadoResponse = await fetch(resultadoUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: resultadoRequestBody,
+    ...options,
   });
   return resultadoResponse;
 }
@@ -152,6 +156,7 @@ app.post("/nuevaventa", async (req, res) => {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: requestBody,
+      ...options,
     });
 
     if (response.ok) {
