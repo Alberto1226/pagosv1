@@ -142,6 +142,10 @@ app.post("/nuevaventa", async (req, res) => {
     const requestBody = `&${sortedDataWithKeys}&cadenaEncriptada=${cadenaEncriptada}`;
     console.log("RequestBody:", requestBody);
 
+    const options = {
+      timeout: process.env.FUNCTION_INVOCATION_TIMEOUT * 1000,
+    };
+
     const response = await fetch(baseUrl, {
       method: "POST",
       headers: {
