@@ -446,7 +446,7 @@ app.post("/cancelarventa", async (req, res) => {
       }  else {
         res.status(resultadoResponse.status).send("Error al obtener resultados");
       }
-    }, 20000); // Esperar 20 segundos (20000 milisegundos)
+    }, 40000); // Esperar 20 segundos (20000 milisegundos)
     } else {
       res.status(response.status).send("Error al cancelar el ticket");
     }
