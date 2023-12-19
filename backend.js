@@ -88,30 +88,16 @@ async function realizarSolicitudResultado(id, idCifrado) {
   const resultadoUrl = "https://www.prosepago.net/v2/resultadov2.ashx";
   const resultadoRequestBody = `&idsolicitud=${id}&cadenaEncriptada=${idCifrado}`;
   console.log("Body :", resultadoRequestBody);
-  const resultadoResponse = await executeWithTimeout(120000, fetch(resultadoUrl, {
+  const resultadoResponse = await fetch(resultadoUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: resultadoRequestBody,
-  }));
+  });
   return resultadoResponse;
 }
 
-/**
- * tiempo de espera
- */
-function executeWithTimeout(ms, promise) {
-  let timeoutId;
-  const timeoutPromise = new Promise((_resolve, reject) => {
-    timeoutId = setTimeout(() => {
-      clearTimeout(timeoutId);
-      reject(new Error("Timeout error: Function execution exceeded time limit"));
-    }, ms);
-  });
-
-  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
-}
 
 
 
@@ -151,12 +137,11 @@ app.post("/nuevaventa", async (req, res) => {
   console.log("Cadena con keys:", sortedDataWithKeys);
 
   try {
-    
     const baseUrl = "https://www.prosepago.net/v2/nuevaventav2.ashx";
 
     const requestBody = `&${sortedDataWithKeys}&cadenaEncriptada=${cadenaEncriptada}`;
     console.log("RequestBody:", requestBody);
-    
+
     const response = await fetch(baseUrl, {
       method: "POST",
       headers: {
@@ -164,9 +149,9 @@ app.post("/nuevaventa", async (req, res) => {
       },
       body: requestBody,
     });
-  
+
     if (response.ok) {
-      setTimeout(async () => {
+      //setTimeout(async () => {
       const data = await response.json();
       const id = data; // Guardar la respuesta en la variable global 'id'
       console.log(data);
@@ -232,12 +217,10 @@ app.post("/nuevaventa", async (req, res) => {
       }  else {
         res.status(resultadoResponse.status).send("Error al obtener resultados");
       }
-    }, 50000); // Esperar 20 segundos (20000 milisegundos)
+    //}, 5000); // Esperar 20 segundos (20000 milisegundos)
     } else {
       res.status(response.status).send("Error");
     }
-
-  
   } catch (error) {
     res.status(500).send("Error interno en el servidor");
   }
