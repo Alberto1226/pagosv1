@@ -1,20 +1,15 @@
 {
-  "version": 2,
-  "functions": {
-    "backend": {
-      "maxDuration": 40
-    }
-  },
-  "builds": [
-    {
-      "src": "backend.js", 
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/backend", 
-      "dest": "/backend.js"
-    }
-  ]
-}
+    "version": 2,
+    "builds": [
+      {
+        "src": "backend.js",
+        "use": "@vercel/node"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/(.*)",
+        "dest": "/backend.js"
+      }
+    ]
+  }
