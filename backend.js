@@ -232,7 +232,7 @@ app.post("/nuevaventa", async (req, res) => {
       }  else {
         res.status(resultadoResponse.status).send("Error al obtener resultados");
       }
-    }, 5000); // Esperar 20 segundos (20000 milisegundos)
+    }, 50000); // Esperar 20 segundos (20000 milisegundos)
     } else {
       res.status(response.status).send("Error");
     }
