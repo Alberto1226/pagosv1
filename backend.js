@@ -88,7 +88,7 @@ async function realizarSolicitudResultado(id, idCifrado) {
   const resultadoUrl = "https://www.prosepago.net/v2/resultadov2.ashx";
   const resultadoRequestBody = `&idsolicitud=${id}&cadenaEncriptada=${idCifrado}`;
   console.log("Body :", resultadoRequestBody);
-  const resultadoResponse = await executeWithTimeout(5000, fetch(resultadoUrl, {
+  const resultadoResponse = await executeWithTimeout(120000, fetch(resultadoUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
