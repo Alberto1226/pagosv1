@@ -5,6 +5,7 @@ import fetch from "node-fetch";
 
 const app = express();
 
+
 app.use(bodyParser.json());
 
 // Función para generar la cadena encriptada
@@ -88,12 +89,16 @@ async function realizarSolicitudResultado(id, idCifrado) {
   const resultadoUrl = "https://www.prosepago.net/v2/resultadov2.ashx";
   const resultadoRequestBody = `&idsolicitud=${id}&cadenaEncriptada=${idCifrado}`;
   console.log("Body :", resultadoRequestBody);
+  const options = {
+    timeout: process.env.FUNCTION_INVOCATION_TIMEOUT * 1000,
+  };
   const resultadoResponse = await fetch(resultadoUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: resultadoRequestBody,
+    ...options,
   });
   return resultadoResponse;
 }
@@ -141,12 +146,17 @@ app.post("/nuevaventa", async (req, res) => {
     const requestBody = `&${sortedDataWithKeys}&cadenaEncriptada=${cadenaEncriptada}`;
     console.log("RequestBody:", requestBody);
 
+    const options = {
+      timeout: process.env.FUNCTION_INVOCATION_TIMEOUT * 1000,
+    };
+
     const response = await fetch(baseUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: requestBody,
+      ...options,
     });
 
     if (response.ok) {
@@ -379,7 +389,7 @@ app.post("/cancelarventa", async (req, res) => {
     });
 
     if (response.ok) {
-      //setTimeout(async () => {
+      setTimeout(async () => {
       const data = await response.json();
       const id = data; // Guardar la respuesta en la variable global 'id'
       console.log(data);
@@ -416,10 +426,10 @@ app.post("/cancelarventa", async (req, res) => {
       if (resultadoResponse.ok) {
         
         let resultadoXMLText = await resultadoResponse.text();
-
+        
         while (resultadoXMLText.trim() === "901") {
-          await new Promise(resolve => setTimeout(resolve, 4000)); // Espera 4 segundos
-
+          await new Promise(resolve => setTimeout(resolve, 9000)); // Espera 4 segundos
+          console.log(resultadoXMLText);
           try {
             const resultadoResponseRepeat = await realizarSolicitudResultado(id, idCifrado);
         
@@ -445,9 +455,9 @@ app.post("/cancelarventa", async (req, res) => {
       }  else {
         res.status(resultadoResponse.status).send("Error al obtener resultados");
       }
-    //}, 20000); // Esperar 20 segundos (20000 milisegundos)
+    }, 20000); // Esperar 20 segundos (20000 milisegundos)
     } else {
-      res.status(response.status).send("Error al reimprimir el ticket");
+      res.status(response.status).send("Error al cancelar el ticket");
     }
   } catch (error) {
     res.status(500).send("Error interno en el servidor al reimprimir el ticket");

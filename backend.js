@@ -103,6 +103,9 @@ async function realizarSolicitudResultado(id, idCifrado) {
   return resultadoResponse;
 }
 
+/**
+ * nueva venta
+ */
 
 
 app.post("/nuevaventa", async (req, res) => {
@@ -217,7 +220,7 @@ app.post("/nuevaventa", async (req, res) => {
         }
 
         if (resultadoXMLText.trim() !== "901") {
-          const encodedXML = Buffer.from(resultadoXMLText).toString('base64');
+          const encodedXML = resultadoXMLText
           res.status(200).json({ encodedXML });
         } else {
           res.status(500).send("Se alcanzó el límite de intentos o se obtuvo un resultado no válido.");
@@ -331,7 +334,7 @@ app.post("/reimprimirticket", async (req, res) => {
         }
 
         if (resultadoXMLText.trim() !== "901") {
-          const encodedXML = Buffer.from(resultadoXMLText).toString('base64');
+          const encodedXML = resultadoXMLText
           res.status(200).json({ encodedXML });
         } else {
           res.status(500).send("Se alcanzó el límite de intentos o se obtuvo un resultado no válido.");
@@ -446,7 +449,7 @@ app.post("/cancelarventa", async (req, res) => {
         }
 
         if (resultadoXMLText.trim() !== "901") {
-          const encodedXML = Buffer.from(resultadoXMLText).toString('base64');
+          const encodedXML = resultadoXMLText
           res.status(200).json({ encodedXML });
         } else {
           res.status(500).send("Se alcanzó el límite de intentos o se obtuvo un resultado no válido.");
@@ -461,6 +464,105 @@ app.post("/cancelarventa", async (req, res) => {
     }
   } catch (error) {
     res.status(500).send("Error interno en el servidor al reimprimir el ticket");
+  }
+});
+
+/**
+ * Reporte de ventas
+ */
+
+app.post("/reporte", async (req, res) => {
+  
+  const valorClave = "SzXQUp554W";
+  const {
+    tipoPlan,
+    terminal,
+    fecha,
+    pv
+  } = req.body;
+
+  // Crear una variable concatenada con los valores sin las claves
+  const datosVentaConcatenados = tipoPlan + terminal + fecha + valorClave;
+  console.log("Datos Historial: ",datosVentaConcatenados);
+
+  const idCifrado = encryptIdAndValorClave(datosVentaConcatenados);
+  console.log("Cadena cifrada: ",idCifrado);
+
+
+  try {
+    const reimprimirUrl = "https://www.prosepago.net/v2/nuevaventav2.ashx";
+
+    const requestBody2 = `&tipoPlan=${tipoPlan}&terminal=${terminal}&fecha=${fecha}&pv=${pv}&cadenaEncriptada=${idCifrado}`;
+    console.log("RequestBody:", requestBody2);
+
+    const response = await fetch(reimprimirUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: requestBody2,
+    });
+
+    if (response.ok) {
+      //setTimeout(async () => {
+      const data = await response.json();
+      const id = data; // Guardar la respuesta en la variable global 'id'
+      console.log(data);
+      console.log(id);
+
+      // Cifrar 'id' y 'valorClave'
+      const valorClave = "SzXQUp554W"; // Considerando que esto ya está definido en tu código
+      console.log(valorClave);
+
+      const idCifradoSinEncriptar = id + valorClave;
+      console.log("Cadena sin encriptar", idCifradoSinEncriptar);
+
+      const idCifrado = encryptIdAndValorClave(idCifradoSinEncriptar);
+
+      console.log("cadena encriptada", idCifrado);
+
+      
+      const resultadoResponse = await realizarSolicitudResultado(id, idCifrado);
+ 
+     
+      if (resultadoResponse.ok) {
+        
+        let resultadoXMLText = await resultadoResponse.text();
+
+        while (resultadoXMLText.trim() === "901") {
+          await new Promise(resolve => setTimeout(resolve, 4000)); // Espera 4 segundos
+
+          try {
+            const resultadoResponseRepeat = await realizarSolicitudResultado(id, idCifrado);
+        
+            if (resultadoResponseRepeat.ok) {
+              resultadoXMLText = await resultadoResponseRepeat.text();
+              console.log("resultado", resultadoXMLText);
+            } else {
+              throw new Error("Error en la solicitud repetida");
+            }
+          } catch (error) {
+            console.log("Error en la solicitud repetida:", error.message);
+            // Manejar este error específico o lanzar uno nuevo según sea necesario
+          }
+        }
+
+        if (resultadoXMLText.trim() !== "901") {
+          const encodedXML = resultadoXMLText
+          res.status(200).json({ encodedXML });
+        } else {
+          res.status(500).send("Se alcanzó el límite de intentos o se obtuvo un resultado no válido.");
+        }
+        
+      }  else {
+        res.status(resultadoResponse.status).send("Error al obtener resultados");
+      }
+    //}, 20000); // Esperar 20 segundos (20000 milisegundos)
+    } else {
+      res.status(response.status).send("Error al reimprimir el ticket");
+    }
+  } catch (error) {
+    res.status(500).send("Error interno en el servidor al generar reporte");
   }
 });
 
