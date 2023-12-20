@@ -9,8 +9,7 @@
     "routes": [
       {
         "src": "/(.*)",
-        "dest": "/backend.js",
-        "maxDuration": 40
+        "dest": "/backend.js"
       }
     ]
   }
