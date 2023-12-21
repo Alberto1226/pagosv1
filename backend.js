@@ -89,16 +89,14 @@ async function realizarSolicitudResultado(id, idCifrado) {
   const resultadoUrl = "https://www.prosepago.net/v2/resultadov2.ashx";
   const resultadoRequestBody = `&idsolicitud=${id}&cadenaEncriptada=${idCifrado}`;
   console.log("Body :", resultadoRequestBody);
-  const options = {
-    timeout: process.env.FUNCTION_INVOCATION_TIMEOUT * 1000,
-  };
+  
   const resultadoResponse = await fetch(resultadoUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: resultadoRequestBody,
-    ...options,
+    
   });
   return resultadoResponse;
 }
@@ -198,15 +196,15 @@ app.post("/nuevaventa", async (req, res) => {
       //inicio de validacion de resultado
      
       if (resultadoResponse.ok) {
-        
         let resultadoXMLText = await resultadoResponse.text();
-
-        while (resultadoXMLText.trim() === "901") {
+        let intentos = 0;
+      
+        while (resultadoXMLText.trim() === "901" && intentos < 15) {
           await new Promise(resolve => setTimeout(resolve, 4000)); // Espera 4 segundos
-
+      
           try {
             const resultadoResponseRepeat = await realizarSolicitudResultado(id, idCifrado);
-        
+      
             if (resultadoResponseRepeat.ok) {
               resultadoXMLText = await resultadoResponseRepeat.text();
               console.log("resultado", resultadoXMLText);
@@ -217,18 +215,20 @@ app.post("/nuevaventa", async (req, res) => {
             console.log("Error en la solicitud repetida:", error.message);
             // Manejar este error específico o lanzar uno nuevo según sea necesario
           }
+      
+          intentos++;
         }
-
+      
         if (resultadoXMLText.trim() !== "901") {
-          const encodedXML = resultadoXMLText
+          const encodedXML = resultadoXMLText;
           res.status(200).json({ encodedXML });
         } else {
           res.status(500).send("Se alcanzó el límite de intentos o se obtuvo un resultado no válido.");
         }
-        
-      }  else {
+      } else {
         res.status(resultadoResponse.status).send("Error al obtener resultados");
       }
+      
     //}, 20000); // Esperar 20 segundos (20000 milisegundos)
     } else {
       res.status(response.status).send("Error");
@@ -312,15 +312,15 @@ app.post("/reimprimirticket", async (req, res) => {
       //inicio de validacion de resultado
      
       if (resultadoResponse.ok) {
-        
         let resultadoXMLText = await resultadoResponse.text();
-
-        while (resultadoXMLText.trim() === "901") {
+        let intentos = 0;
+      
+        while (resultadoXMLText.trim() === "901" && intentos < 10) {
           await new Promise(resolve => setTimeout(resolve, 4000)); // Espera 4 segundos
-
+      
           try {
             const resultadoResponseRepeat = await realizarSolicitudResultado(id, idCifrado);
-        
+      
             if (resultadoResponseRepeat.ok) {
               resultadoXMLText = await resultadoResponseRepeat.text();
               console.log("resultado", resultadoXMLText);
@@ -331,18 +331,20 @@ app.post("/reimprimirticket", async (req, res) => {
             console.log("Error en la solicitud repetida:", error.message);
             // Manejar este error específico o lanzar uno nuevo según sea necesario
           }
+      
+          intentos++;
         }
-
+      
         if (resultadoXMLText.trim() !== "901") {
-          const encodedXML = resultadoXMLText
+          const encodedXML = resultadoXMLText;
           res.status(200).json({ encodedXML });
         } else {
           res.status(500).send("Se alcanzó el límite de intentos o se obtuvo un resultado no válido.");
         }
-        
-      }  else {
+      } else {
         res.status(resultadoResponse.status).send("Error al obtener resultados");
       }
+      
     //}, 20000); // Esperar 20 segundos (20000 milisegundos)
     } else {
       res.status(response.status).send("Error al reimprimir el ticket");
@@ -427,15 +429,15 @@ app.post("/cancelarventa", async (req, res) => {
       //inicio de validacion de resultado
      
       if (resultadoResponse.ok) {
-        
         let resultadoXMLText = await resultadoResponse.text();
-        
-        while (resultadoXMLText.trim() === "901") {
-          await new Promise(resolve => setTimeout(resolve, 9000)); // Espera 4 segundos
-          console.log(resultadoXMLText);
+        let intentos = 0;
+      
+        while (resultadoXMLText.trim() === "901" && intentos < 15) {
+          await new Promise(resolve => setTimeout(resolve, 4000)); // Espera 4 segundos
+      
           try {
             const resultadoResponseRepeat = await realizarSolicitudResultado(id, idCifrado);
-        
+      
             if (resultadoResponseRepeat.ok) {
               resultadoXMLText = await resultadoResponseRepeat.text();
               console.log("resultado", resultadoXMLText);
@@ -446,18 +448,20 @@ app.post("/cancelarventa", async (req, res) => {
             console.log("Error en la solicitud repetida:", error.message);
             // Manejar este error específico o lanzar uno nuevo según sea necesario
           }
+      
+          intentos++;
         }
-
+      
         if (resultadoXMLText.trim() !== "901") {
-          const encodedXML = resultadoXMLText
+          const encodedXML = resultadoXMLText;
           res.status(200).json({ encodedXML });
         } else {
           res.status(500).send("Se alcanzó el límite de intentos o se obtuvo un resultado no válido.");
         }
-        
-      }  else {
+      } else {
         res.status(resultadoResponse.status).send("Error al obtener resultados");
       }
+      
     }, 20000); // Esperar 20 segundos (20000 milisegundos)
     } else {
       res.status(response.status).send("Error al cancelar el ticket");
@@ -526,15 +530,15 @@ app.post("/reporte", async (req, res) => {
  
      
       if (resultadoResponse.ok) {
-        
         let resultadoXMLText = await resultadoResponse.text();
-
-        while (resultadoXMLText.trim() === "901") {
+        let intentos = 0;
+      
+        while (resultadoXMLText.trim() === "901" && intentos < 10) {
           await new Promise(resolve => setTimeout(resolve, 4000)); // Espera 4 segundos
-
+      
           try {
             const resultadoResponseRepeat = await realizarSolicitudResultado(id, idCifrado);
-        
+      
             if (resultadoResponseRepeat.ok) {
               resultadoXMLText = await resultadoResponseRepeat.text();
               console.log("resultado", resultadoXMLText);
@@ -545,18 +549,20 @@ app.post("/reporte", async (req, res) => {
             console.log("Error en la solicitud repetida:", error.message);
             // Manejar este error específico o lanzar uno nuevo según sea necesario
           }
+      
+          intentos++;
         }
-
+      
         if (resultadoXMLText.trim() !== "901") {
-          const encodedXML = resultadoXMLText
+          const encodedXML = resultadoXMLText;
           res.status(200).json({ encodedXML });
         } else {
           res.status(500).send("Se alcanzó el límite de intentos o se obtuvo un resultado no válido.");
         }
-        
-      }  else {
+      } else {
         res.status(resultadoResponse.status).send("Error al obtener resultados");
       }
+      
     //}, 20000); // Esperar 20 segundos (20000 milisegundos)
     } else {
       res.status(response.status).send("Error al reimprimir el ticket");
